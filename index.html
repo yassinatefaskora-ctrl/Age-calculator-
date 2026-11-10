@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حاسبة العمر والتواريخ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1b2233;--muted:#6b7488;--accent:#2f6fed;--accent-t:#fff;--line:#e3e7f0;--tile:#eef3ff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1b2029;--text:#e8ecf5;--muted:#98a2b8;--accent:#5b8dff;--accent-t:#0b1020;--line:#2a3140;--tile:#232b3b}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1b2029;--text:#e8ecf5;--muted:#98a2b8;--accent:#5b8dff;--accent-t:#0b1020;--line:#2a3140;--tile:#232b3b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Cairo",system-ui,Tahoma,sans-serif;display:flex;justify-content:center;padding:20px 14px}
+.wrap{width:100%;max-width:460px}
+h1{font-size:22px;text-align:center;margin:8px 0 18px}
+.tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:14px}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:10px;border-radius:10px;cursor:pointer}
+.tabs button.on{background:var(--accent);color:var(--accent-t)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+label{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+input{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.row{display:flex;gap:8px}.row>div{flex:1}
+.go{width:100%;margin-top:16px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-t);font:inherit;font-weight:700;font-size:16px;padding:12px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.tile{background:var(--tile);border-radius:12px;text-align:center;padding:10px 4px}
+.tile b{display:block;font-size:24px}.tile span{font-size:13px;color:var(--muted)}
+.tot{margin-top:14px;font-size:14px;line-height:1.9;border-top:1px solid var(--line);padding-top:10px}
+.err{color:#d93a3a;margin-top:12px;font-size:14px;text-align:center}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>حاسبة العمر والتواريخ</h1>
+<div class="tabs"><button id="t1" class="on">حساب العمر</button><button id="t2">الفرق بين تاريخين</button></div>
+
+<div class="card" id="p1">
+<label>تاريخ الميلاد</label><input type="date" id="dob">
+<label>وقت الميلاد (اختياري)</label><input type="time" id="tob">
+<button class="go" id="g1">احسب عمري</button>
+</div>
+
+<div class="card hide" id="p2">
+<label>من تاريخ ووقت</label><input type="datetime-local" id="d1">
+<label>إلى تاريخ ووقت</label><input type="datetime-local" id="d2">
+<button class="go" id="g2">احسب الفرق</button>
+</div>
+
+<div class="card hide" id="res" style="margin-top:14px">
+<div class="grid" id="grid"></div>
+<div class="tot" id="tot"></div>
+</div>
+<div class="err" id="err"></div>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)};
+var NAMES=[["سنة","y"],["شهر","m"],["يوم","d"],["ساعة","h"],["دقيقة","mi"]];
+function dim(y,m){return new Date(y,m+1,0).getDate()}
+function diff(a,b){
+var y=b.getFullYear()-a.getFullYear(),m=b.getMonth()-a.getMonth(),d=b.getDate()-a.getDate(),
+h=b.getHours()-a.getHours(),mi=b.getMinutes()-a.getMinutes();
+if(mi<0){mi+=60;h--}
+if(h<0){h+=24;d--}
+if(d<0){var pm=b.getMonth()-1,py=b.getFullYear();if(pm<0){pm=11;py--}d+=dim(py,pm);m--}
+if(m<0){m+=12;y--}
+return{y:y,m:m,d:d,h:h,mi:mi}}
+function fmt(n){return Math.floor(n).toLocaleString("ar-EG")}
+function show(a,b,extra){
+$("err").textContent="";
+if(isNaN(a)||isNaN(b)){$("err").textContent="من فضلك أدخل التواريخ كاملة";$("res").classList.add("hide");return}
+var swapped=false;if(a>b){var t=a;a=b;b=t;swapped=true}
+var r=diff(a,b),ms=b-a;
+$("grid").innerHTML=NAMES.map(function(n){return '<div class="tile"><b>'+fmt(r[n[1]])+'</b><span>'+n[0]+'</span></div>'}).join("");
+var s="";
+s+="إجمالي الأيام: <b>"+fmt(ms/864e5)+"</b><br>";
+s+="إجمالي الأسابيع: <b>"+fmt(ms/6048e5)+"</b><br>";
+s+="إجمالي الساعات: <b>"+fmt(ms/36e5)+"</b><br>";
+s+="إجمالي الدقائق: <b>"+fmt(ms/6e4)+"</b>";
+if(extra)s+="<br>"+extra(a,b);
+if(swapped)s+="<br><small>(تم عكس الترتيب لأن تاريخ البداية بعد النهاية)</small>";
+$("tot").innerHTML=s;$("res").classList.remove("hide")}
+function nextBday(a,now){
+var n=new Date(now.getFullYear(),a.getMonth(),a.getDate());
+if(n<new Date(now.getFullYear(),now.getMonth(),now.getDate()))n=new Date(now.getFullYear()+1,a.getMonth(),a.getDate());
+var days=Math.round((n-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+var wd=n.toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"long",year:"numeric"});return days===0?"النهارده عيد ميلادك 🎉 ("+wd+")":"باقي على عيد ميلادك القادم: <b>"+fmt(days)+"</b> يوم<br>عيد ميلادك القادم يوم: <b>"+wd+"</b>"}
+$("g1").onclick=function(){
+if(!$("dob").value){show(NaN,NaN);return}
+var a=new Date($("dob").value+"T"+($("tob").value||"00:00")),now=new Date();
+if(a>now){$("err").textContent="تاريخ الميلاد في المستقبل";$("res").classList.add("hide");return}
+show(a,now,function(a,b){return nextBday(a,b)})};
+$("g2").onclick=function(){show(new Date($("d1").value),new Date($("d2").value))};
+function tab(n){
+$("p1").classList.toggle("hide",n!==1);$("p2").classList.toggle("hide",n!==2);
+$("t1").classList.toggle("on",n===1);$("t2").classList.toggle("on",n===2);
+$("res").classList.add("hide");$("err").textContent=""}
+$("t1").onclick=function(){tab(1)};$("t2").onclick=function(){tab(2)};
+</script>
+</body>
+</html>
